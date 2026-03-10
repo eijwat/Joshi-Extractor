@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>助詞抽出器</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=IBM+Plex+Mono:wght@300;400&display=swap');
+
+  :root {
+    --ink: #1a1a18;
+    --paper: #f5f0e8;
+    --pale: #ede8dc;
+    --accent: #8b2c2c;
+    --accent2: #3d5a6b;
+    --muted: #888070;
+    --border: #ccc5b0;
+    --space-char-color: #c8bfac;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Noto Serif JP', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  header {
+    width: 100%;
+    padding: 2.5rem 2rem 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--pale);
+  }
+
+  h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    color: var(--ink);
+  }
+
+  .subtitle {
+    margin-top: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  main {
+    width: 100%;
+    max-width: 860px;
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .panel {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .panel-label {
+    background: var(--pale);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+  }
+
+  textarea {
+    width: 100%;
+    padding: 1.2rem;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1rem;
+    line-height: 2;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    resize: vertical;
+    outline: none;
+    min-height: 160px;
+  }
+
+  .controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  button {
+    padding: 0.65rem 1.8rem;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    border: none;
+    cursor: pointer;
+    border-radius: 1px;
+    transition: all 0.2s;
+  }
+
+  #btn-run {
+    background: var(--accent);
+    color: #fff;
+  }
+  #btn-run:hover { background: #6e2020; }
+  #btn-run:disabled { background: var(--muted); cursor: wait; }
+
+  #btn-clear {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  #btn-clear:hover { background: var(--pale); color: var(--ink); }
+
+  #status {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-left: auto;
+  }
+
+  .status-loading { color: var(--accent2) !important; }
+  .status-ready   { color: #4a7a4a !important; }
+  .status-error   { color: var(--accent) !important; }
+
+  #output-area {
+    padding: 1.2rem;
+    font-size: 1rem;
+    line-height: 2.2;
+    min-height: 160px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-family: 'Noto Serif JP', serif;
+  }
+
+  .tok-joshi    { color: var(--ink); }
+  .tok-punct    { color: var(--ink); }
+  .tok-space    { color: var(--space-char-color); }
+
+  .legend {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    padding: 0.8rem 1.2rem;
+    border-top: 1px solid var(--border);
+    background: var(--pale);
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .legend span { display: flex; align-items: center; gap: 0.4rem; }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+  }
+  .dot-joshi { background: var(--ink); }
+  .dot-punct { background: var(--accent2); }
+  .dot-space { background: var(--space-char-color); }
+
+  .copy-btn {
+    float: right;
+    font-size: 0.72rem;
+    padding: 0.25rem 0.7rem;
+    margin: 0;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .copy-btn:hover { background: var(--pale); color: var(--ink); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>助詞抽出器</h1>
+  <div class="subtitle">particle &amp; punctuation extractor · kuromoji</div>
+</header>
+
+<main>
+  <div class="panel">
+    <div class="panel-label">入力テキスト</div>
+    <textarea id="input" placeholder="ここに日本語テキストを入力してください。&#10;助詞と句読点だけが残り、他の文字は全角スペースに置き換わります。"></textarea>
+  </div>
+
+  <div class="controls">
+    <button id="btn-run" disabled>抽出する</button>
+    <button id="btn-clear">クリア</button>
+    <span id="status" class="status-loading">▸ 辞書を読み込み中…</span>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">
+      出力
+      <button class="copy-btn" id="btn-copy" style="display:none">コピー</button>
+    </div>
+    <div id="output-area"></div>
+    <div class="legend">
+      <span><i class="dot dot-joshi"></i> 助詞・助動詞</span>
+      <span><i class="dot dot-punct"></i> 句読点・記号</span>
+      <span><i class="dot dot-space"></i> 全角スペース（置換後）</span>
+    </div>
+  </div>
+</main>
+
+<!-- kuromoji via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js"></script>
+<script>
+// ---- 保持する品詞 ----
+const KEEP_PARTS = new Set([
+  '助詞', '助動詞'
+]);
+
+// 句読点・記号として保持する品詞細分類
+const KEEP_PUNCT_SUBTYPES = new Set([
+  '読点', '句点', '括弧開', '括弧閉', '感動詞', '記号'
+]);
+
+// 句読点として保持する文字（念のため文字でも判定）
+const PUNCT_CHARS = new Set([
+  '、','。','，','．','・','「','」','『','』','【','】','（','）','(',')',
+  '！','？','!','?','…','―','—','〜','～','\n','\r'
+]);
+
+let tokenizer = null;
+
+kuromoji.builder({ dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict' })
+  .build((err, t) => {
+    const status = document.getElementById('status');
+    if (err) {
+      status.textContent = '✗ 辞書読み込み失敗';
+      status.className = 'status-error';
+      return;
+    }
+    tokenizer = t;
+    status.textContent = '✓ 準備完了';
+    status.className = 'status-ready';
+    document.getElementById('btn-run').disabled = false;
+  });
+
+function processText(text) {
+  const tokens = tokenizer.tokenize(text);
+  const output = document.getElementById('output-area');
+  output.innerHTML = '';
+
+  tokens.forEach(tok => {
+    const surface = tok.surface_form;      // 表層形
+    const pos     = tok.pos;               // 品詞
+    const pos1    = tok.pos_detail_1 || ''; // 品詞細分類1
+
+    let keep = false;
+    let type = 'other';
+
+    if (KEEP_PARTS.has(pos)) {
+      keep = true; type = 'joshi';
+    } else if (KEEP_PUNCT_SUBTYPES.has(pos1) || [...surface].every(c => PUNCT_CHARS.has(c))) {
+      keep = true; type = 'punct';
+    } else if (pos === '記号') {
+      keep = true; type = 'punct';
+    }
+
+    if (keep) {
+      const span = document.createElement('span');
+      span.className = `tok-${type}`;
+      span.textContent = surface;
+      output.appendChild(span);
+    } else {
+      // 文字数分の全角スペースに置換
+      const len = [...surface].length; // サロゲートペア対応
+      const span = document.createElement('span');
+      span.className = 'tok-space';
+      span.textContent = '　'.repeat(len);
+      output.appendChild(span);
+    }
+  });
+
+  document.getElementById('btn-copy').style.display = 'inline-block';
+}
+
+document.getElementById('btn-run').addEventListener('click', () => {
+  const text = document.getElementById('input').value;
+  if (!text.trim()) return;
+  processText(text);
+});
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  document.getElementById('input').value = '';
+  document.getElementById('output-area').innerHTML = '';
+  document.getElementById('btn-copy').style.display = 'none';
+});
+
+document.getElementById('btn-copy').addEventListener('click', () => {
+  const text = document.getElementById('output-area').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = '✓ コピーしました';
+    setTimeout(() => btn.textContent = 'コピー', 1500);
+  });
+});
+
+// Ctrl+Enter で実行
+document.getElementById('input').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    document.getElementById('btn-run').click();
+  }
+});
+</script>
+</body>
+</html>
