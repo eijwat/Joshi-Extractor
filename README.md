@@ -6,13 +6,9 @@
 
 助詞だけを抽出した文章をAI（Claude）に渡したところ、助詞の配列パターンだけで夏目漱石の『坊っちゃん』を特定するという驚くべき結果が得られました。この実験の詳細は [GitHub Pages](https://eijwat.github.io/Joshi-Extractor/) で公開しています。
 
-## デモ
-
-GitHub Pages でそのまま動作します。サーバーサイド処理は不要です。
-
-[https://eijwat.github.io/Joshi-Extractor/](https://eijwat.github.io/Joshi-Extractor/)
-
 ## 使い方
+
+HTMLファイルをダウンロードして、ブラウザーに投げ込んでください。初回だけ辞書の読み込みにすこし時間がかかります。
 
 1. テキストエリアに日本語を入力
 2. 「抽出する」ボタンを押す（または Ctrl+Enter）
