@@ -3,321 +3,438 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>助詞抽出器</title>
+<title>助詞の骨格：AIは助詞だけで漱石を当てるか</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;700&family=Shippori+Mincho:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=IBM+Plex+Mono:wght@300;400&display=swap');
-
   :root {
-    --ink: #1a1a18;
-    --paper: #f5f0e8;
-    --pale: #ede8dc;
-    --accent: #8b2c2c;
-    --accent2: #3d5a6b;
-    --muted: #888070;
-    --border: #ccc5b0;
-    --space-char-color: #c8bfac;
+    --bg: #F5F5F0;
+    --bg-card: #FFFFFF;
+    --text: #1a1a18;
+    --text-secondary: #5a5a55;
+    --accent: #ae5630;
+    --accent-light: #c97a58;
+    --accent-bg: rgba(174, 86, 48, 0.06);
+    --border: #e0ddd5;
+    --border-light: #eae7e0;
+    --shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.035);
+    --shadow-hover: 0 0.5rem 2rem rgba(0, 0, 0, 0.06);
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
 
   body {
-    background: var(--paper);
-    color: var(--ink);
-    font-family: 'Noto Serif JP', serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    font-family: 'Shippori Mincho', 'Noto Serif JP', 'Georgia', serif;
+    background-color: var(--bg);
+    color: var(--text);
+    line-height: 2;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  header {
-    width: 100%;
-    padding: 2.5rem 2rem 1.5rem;
+  /* --- Header --- */
+  .header {
+    padding: 6rem 2rem 4rem;
     text-align: center;
-    border-bottom: 1px solid var(--border);
-    background: var(--pale);
-  }
-
-  h1 {
-    font-size: 1.8rem;
-    font-weight: 600;
-    letter-spacing: 0.15em;
-    color: var(--ink);
-  }
-
-  .subtitle {
-    margin-top: 0.4rem;
-    font-size: 0.8rem;
-    color: var(--muted);
-    letter-spacing: 0.2em;
-    font-family: 'IBM Plex Mono', monospace;
-  }
-
-  main {
-    width: 100%;
-    max-width: 860px;
-    padding: 2rem 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-
-  .panel {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 2px;
+    position: relative;
     overflow: hidden;
   }
 
-  .panel-label {
-    background: var(--pale);
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(174, 86, 48, 0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(174, 86, 48, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .header-inner {
+    position: relative;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .header h1 {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 700;
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    letter-spacing: 0.08em;
+    color: var(--text);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+
+  .header .subtitle {
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+  }
+
+  .header .star {
+    display: inline-block;
+    color: var(--accent);
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeIn 1s ease 0.3s forwards;
+  }
+
+  /* --- Main Content --- */
+  .content {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+  }
+
+  .section {
+    margin-bottom: 4rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slideUp 0.8s ease forwards;
+  }
+
+  .section:nth-child(1) { animation-delay: 0.1s; }
+  .section:nth-child(2) { animation-delay: 0.2s; }
+  .section:nth-child(3) { animation-delay: 0.3s; }
+  .section:nth-child(4) { animation-delay: 0.4s; }
+  .section:nth-child(5) { animation-delay: 0.5s; }
+  .section:nth-child(6) { animation-delay: 0.6s; }
+
+  h2 {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 600;
+    font-size: 1.35rem;
+    letter-spacing: 0.06em;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--border);
-    padding: 0.5rem 1rem;
-    font-size: 0.72rem;
-    letter-spacing: 0.25em;
-    color: var(--muted);
-    font-family: 'IBM Plex Mono', monospace;
-    text-transform: uppercase;
   }
 
-  textarea {
-    width: 100%;
-    padding: 1.2rem;
-    font-family: 'Noto Serif JP', serif;
+  h2 .num {
+    color: var(--accent);
+    font-weight: 400;
+    margin-right: 0.4em;
+    font-size: 0.9em;
+  }
+
+  p {
+    margin-bottom: 1.2rem;
+    text-align: justify;
+    font-weight: 400;
     font-size: 1rem;
-    line-height: 2;
-    color: var(--ink);
-    background: transparent;
-    border: none;
-    resize: vertical;
-    outline: none;
-    min-height: 160px;
+    hanging-punctuation: allow-end;
   }
 
-  .controls {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    flex-wrap: wrap;
+  strong {
+    font-weight: 600;
+    color: var(--text);
   }
 
-  button {
-    padding: 0.65rem 1.8rem;
-    font-family: 'Noto Serif JP', serif;
-    font-size: 0.9rem;
-    letter-spacing: 0.1em;
-    border: none;
-    cursor: pointer;
-    border-radius: 1px;
-    transition: all 0.2s;
+  /* --- Blockquotes --- */
+  .quote-card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 2rem 2.25rem;
+    margin: 1.5rem 0 2rem;
+    box-shadow: var(--shadow);
+    border-left: 3px solid var(--accent);
+    position: relative;
+    transition: box-shadow 0.3s ease;
   }
 
-  #btn-run {
-    background: var(--accent);
-    color: #fff;
-  }
-  #btn-run:hover { background: #6e2020; }
-  #btn-run:disabled { background: var(--muted); cursor: wait; }
-
-  #btn-clear {
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
-  #btn-clear:hover { background: var(--pale); color: var(--ink); }
-
-  #status {
-    font-size: 0.78rem;
-    color: var(--muted);
-    font-family: 'IBM Plex Mono', monospace;
-    margin-left: auto;
+  .quote-card:hover {
+    box-shadow: var(--shadow-hover);
   }
 
-  .status-loading { color: var(--accent2) !important; }
-  .status-ready   { color: #4a7a4a !important; }
-  .status-error   { color: var(--accent) !important; }
-
-  #output-area {
-    padding: 1.2rem;
-    font-size: 1rem;
-    line-height: 2.2;
-    min-height: 160px;
-    white-space: pre-wrap;
-    word-break: break-all;
-    font-family: 'Noto Serif JP', serif;
+  .quote-card p {
+    font-size: 0.95rem;
+    line-height: 2.1;
+    margin-bottom: 0;
   }
 
-  .tok-joshi    { color: var(--ink); }
-  .tok-punct    { color: var(--ink); }
-  .tok-space    { color: var(--space-char-color); }
-
-  .legend {
-    display: flex;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-    padding: 0.8rem 1.2rem;
-    border-top: 1px solid var(--border);
-    background: var(--pale);
+  .quote-card .label {
+    display: inline-block;
     font-size: 0.75rem;
-    color: var(--muted);
-    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
   }
 
-  .legend span { display: flex; align-items: center; gap: 0.4rem; }
-  .dot {
-    width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+  /* --- Particle pattern display --- */
+  .particle-pattern {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 2rem 2.25rem;
+    margin: 1.5rem 0 2rem;
+    box-shadow: var(--shadow);
+    font-size: 0.9rem;
+    line-height: 2.4;
+    word-break: break-all;
+    border: 1px solid var(--border-light);
   }
-  .dot-joshi { background: var(--ink); }
-  .dot-punct { background: var(--accent2); }
-  .dot-space { background: var(--space-char-color); }
 
-  .copy-btn {
-    float: right;
-    font-size: 0.72rem;
-    padding: 0.25rem 0.7rem;
-    margin: 0;
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--border);
-    cursor: pointer;
+  .particle-pattern .p {
+    color: var(--accent);
+    font-weight: 700;
   }
-  .copy-btn:hover { background: var(--pale); color: var(--ink); }
+
+  .particle-pattern .blank {
+    color: #ccc;
+    letter-spacing: -0.05em;
+  }
+
+  /* --- Claude's response highlight --- */
+  .claude-says {
+    background: var(--accent-bg);
+    border-radius: 12px;
+    padding: 1.75rem 2.25rem;
+    margin: 1.5rem 0 2rem;
+    border: 1px solid rgba(174, 86, 48, 0.12);
+  }
+
+  .claude-says p {
+    font-weight: 500;
+    font-size: 1.05rem;
+    color: var(--text);
+    margin-bottom: 0;
+    text-align: center;
+  }
+
+  .claude-says .claude-icon {
+    display: block;
+    text-align: center;
+    margin-bottom: 0.75rem;
+    color: var(--accent);
+    font-size: 1.2rem;
+  }
+
+  /* --- Original text with particles highlighted --- */
+  .literary-text {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 2.25rem 2.5rem;
+    margin: 1.5rem 0 2rem;
+    box-shadow: var(--shadow);
+    line-height: 2.3;
+    font-size: 0.95rem;
+    position: relative;
+  }
+
+  .literary-text .particle {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .literary-text .source {
+    display: block;
+    text-align: right;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+
+  /* --- Separator --- */
+  .sep {
+    text-align: center;
+    margin: 3rem 0;
+    color: var(--accent);
+    font-size: 0.9rem;
+    letter-spacing: 1em;
+    opacity: 0.5;
+  }
+
+  /* --- Footer --- */
+  .footer {
+    text-align: center;
+    padding: 3rem 2rem 4rem;
+    border-top: 1px solid var(--border);
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .footer .final-quote {
+    font-size: 0.95rem;
+    font-style: italic;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 2;
+  }
+
+  .footer .meta {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.8;
+  }
+
+  .footer .meta a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(174, 86, 48, 0.3);
+    transition: border-color 0.2s;
+  }
+
+  .footer .meta a:hover {
+    border-color: var(--accent);
+  }
+
+  /* --- Annotations (small inline notes) --- */
+  .annotation {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: -0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* --- Animations --- */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* --- Responsive --- */
+  @media (max-width: 600px) {
+    .header {
+      padding: 4rem 1.5rem 3rem;
+    }
+    .content {
+      padding: 0 1.25rem 4rem;
+    }
+    .quote-card,
+    .particle-pattern,
+    .claude-says,
+    .literary-text {
+      padding: 1.5rem 1.5rem;
+    }
+    body {
+      font-size: 15px;
+    }
+  }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>助詞抽出器</h1>
-  <div class="subtitle">particle &amp; punctuation extractor · kuromoji</div>
+<header class="header">
+  <div class="header-inner">
+    <div class="star">✦</div>
+    <h1>助詞の骨格<br>AIは助詞だけで漱石を当てるか</h1>
+    <p class="subtitle">2026年3月　エイジ（英治）× Claude</p>
+  </div>
 </header>
 
-<main>
-  <div class="panel">
-    <div class="panel-label">入力テキスト</div>
-    <textarea id="input" placeholder="ここに日本語テキストを入力してください。&#10;助詞と句読点だけが残り、他の文字は全角スペースに置き換わります。"></textarea>
+<main class="content">
+
+  <!-- Section 1: Introduction -->
+  <div class="section">
+    <h2><span class="num">一、</span>はじめに</h2>
+    <p>ある日、ひとつの遊びを思いついた。</p>
+    <p>日本語の文章から<strong>助詞だけ</strong>を抽出し、空いた場所をAI（Claude）に埋めてもらう。いわば文章の「骨格」だけを渡して、そこから元の文章を復元、あるいは、まったく新しい文章を創作してもらうという実験である。</p>
+    <p>結果は、予想を超えた。</p>
   </div>
 
-  <div class="controls">
-    <button id="btn-run" disabled>抽出する</button>
-    <button id="btn-clear">クリア</button>
-    <span id="status" class="status-loading">▸ 辞書を読み込み中…</span>
+  <!-- Section 2: The Puzzle -->
+  <div class="section">
+    <h2><span class="num">二、</span>出題</h2>
+    <p>以下の助詞パターンが提示された。ルールはひとつ。この助詞の配置を守りながら、空欄を埋めること。芸術的あるいは文学的な文章になれば最高である。</p>
+
+    <div class="particle-pattern">
+      「　<span class="p">の</span>　<span class="p">を</span>　　　<span class="p">を</span>　　<span class="p">て</span>　<span class="p">た</span>。　　<span class="p">が</span>　　<span class="p">へ</span>　　<span class="p">て</span>　　<span class="p">へも</span>　　<span class="p">ず</span>、　　<span class="p">を</span>　　<span class="p">た</span>　　、　<span class="p">や</span>　　<span class="p">たよと</span>　　　　<span class="p">だら</span>、　　　　　　　、　　　　、　　　　<span class="p">て</span>　<span class="p">て</span>　　　<span class="p">たと</span>　<span class="p">を</span>　　　　<span class="p">と</span>　　<span class="p">た</span>。　　<span class="p">も</span>　　　　　　　　　<span class="p">たから</span>、　　　　<span class="p">へは</span>　　<span class="p">ない</span>、　　<span class="p">で</span>　<span class="p">と</span>　　<span class="p">を</span>　　　<span class="p">だと</span>　　<span class="p">た</span>。<br>
+      　　　　　　　<span class="p">の</span>　　<span class="p">で</span>　　<span class="p">の</span>　　<span class="p">に</span>　　<span class="p">た</span>。　　<span class="p">は</span>　　　　<span class="p">で</span>、　　<span class="p">は</span>　　<span class="p">だ</span>。　<span class="p">は</span>　　　　<span class="p">の</span>　<span class="p">でなくっても</span>　　　　<span class="p">の</span>　　<span class="p">であったが</span>　　　<span class="p">な</span>　<span class="p">に</span>　　<span class="p">の</span>　　　　<span class="p">に</span>　　　<span class="p">で</span>　　　<span class="p">た</span>。　　　　　　<span class="p">を</span>　　<span class="p">で</span>　　　　　　　<span class="p">だから</span>　<span class="p">が</span>　　<span class="p">だら</span>、　　　　　<span class="p">の</span>　　<span class="p">へ</span>　　　<span class="p">て</span>　　　。　　<span class="p">の</span>　　<span class="p">で</span>　　　　　<span class="p">の</span>　　　<span class="p">を</span>　　　<span class="p">に</span>　　<span class="p">て</span>　　<span class="p">ますと</span>　　<span class="p">た</span>。　　　　<span class="p">の</span>　<span class="p">は</span>　　　<span class="p">の</span>　　　<span class="p">に</span>　　。」
+    </div>
   </div>
 
-  <div class="panel">
-    <div class="panel-label">
-      出力
-      <button class="copy-btn" id="btn-copy" style="display:none">コピー</button>
+  <!-- Section 3: Claude's Response -->
+  <div class="section">
+    <h2><span class="num">三、</span>Claudeの反応</h2>
+    <p>Claudeは助詞パターンの分析を始めた直後、こう述べた。</p>
+
+    <div class="claude-says">
+      <span class="claude-icon">✦</span>
+      <p>「この配置、夏目漱石の『坊っちゃん』冒頭ではないでしょうか。」</p>
     </div>
-    <div id="output-area"></div>
-    <div class="legend">
-      <span><i class="dot dot-joshi"></i> 助詞・助動詞</span>
-      <span><i class="dot dot-punct"></i> 句読点・記号</span>
-      <span><i class="dot dot-space"></i> 全角スペース（置換後）</span>
+
+    <p>冒頭ではなかった。しかし、<strong>夏目漱石の『坊っちゃん』である</strong>ことは正しかった。</p>
+    <p>正解は『坊っちゃん』の<strong>末尾</strong>、清が亡くなる場面である。</p>
+  </div>
+
+  <!-- Section 4: Original Text -->
+  <div class="section">
+    <h2><span class="num">四、</span>元の文章</h2>
+    <p class="annotation">夏目漱石『坊っちゃん』末尾より。助詞を朱で示す。</p>
+
+    <div class="literary-text">
+      清<span class="particle">の</span>事<span class="particle">を</span>話す<span class="particle">の</span>を忘れていた。おれ<span class="particle">が</span>東京<span class="particle">へ</span>着い<span class="particle">て</span>下宿<span class="particle">へも</span>行か<span class="particle">ず</span>、革鞄<span class="particle">を</span>提げ<span class="particle">た</span>まま、清<span class="particle">や</span>帰っ<span class="particle">たよと</span>飛び込ん<span class="particle">だら</span>、あら坊っちゃん、よくまあ、早く帰って来<span class="particle">て</span>下さっ<span class="particle">たと</span>涙<span class="particle">を</span>ぽたぽた<span class="particle">と</span>落し<span class="particle">た</span>。おれ<span class="particle">も</span>あまり嬉しかっ<span class="particle">たから</span>、もう田舎<span class="particle">へは</span>行か<span class="particle">ない</span>、東京<span class="particle">で</span>清<span class="particle">と</span>うち<span class="particle">を</span>持つん<span class="particle">だと</span>云っ<span class="particle">た</span>。
+      <br><br>
+      その後ある人<span class="particle">の</span>周旋<span class="particle">で</span>街鉄<span class="particle">の</span>技手<span class="particle">に</span>なっ<span class="particle">た</span>。月給<span class="particle">は</span>二十五円<span class="particle">で</span>、家賃<span class="particle">は</span>六円<span class="particle">だ</span>。清<span class="particle">は</span>玄関付き<span class="particle">の</span>家<span class="particle">でなくっても</span>至極満足<span class="particle">の</span>様子<span class="particle">であったが</span>気の毒<span class="particle">な</span>事<span class="particle">に</span>今年<span class="particle">の</span>二月肺炎<span class="particle">に</span>罹り死んでしまっ<span class="particle">た</span>。死ぬ前日おれ<span class="particle">を</span>呼ん<span class="particle">で</span>坊っちゃん後生<span class="particle">だから</span>清<span class="particle">が</span>死ん<span class="particle">だら</span>、坊っちゃん<span class="particle">の</span>お寺<span class="particle">へ</span>埋め<span class="particle">て</span>下さい。お墓<span class="particle">の</span>なか<span class="particle">で</span>坊っちゃん<span class="particle">の</span>来る<span class="particle">の</span>を楽しみ<span class="particle">に</span>待っ<span class="particle">て</span>おり<span class="particle">ますと</span>云っ<span class="particle">た</span>。だから清<span class="particle">の</span>墓<span class="particle">は</span>小日向<span class="particle">の</span>養源寺<span class="particle">に</span>ある。
+      <span class="source">——夏目漱石『坊っちゃん』（1906年）</span>
+    </div>
+
+    <p>井上ひさしは、最後の一文の「だから」を日本語で一番美しい「だから」の用例だと評している。まったく同感である。この「だから」には『坊っちゃん』のすべてが詰まっている。正直、涙が出る。</p>
+  </div>
+
+  <!-- Section 5: Claude's Creation -->
+  <div class="section">
+    <h2><span class="num">五、</span>Claudeが創作した文章</h2>
+    <p class="annotation">同じ助詞パターンを手がかりに、Claudeが創作した散文詩。</p>
+
+    <div class="literary-text">
+      夢<span class="particle">の</span>残像<span class="particle">を</span>追い、幻<span class="particle">を</span>求め<span class="particle">て</span>歩い<span class="particle">た</span>。街<span class="particle">が</span>遠く<span class="particle">へ</span>霞ん<span class="particle">で</span>、海<span class="particle">へも</span>届か<span class="particle">ず</span>、影<span class="particle">を</span>落とし<span class="particle">た</span>夜明け、風<span class="particle">や</span>光<span class="particle">が</span>消え<span class="particle">たよと</span>誰かが言っ<span class="particle">たら</span>、それは嘘だ、空は晴れている、静かに燃え<span class="particle">て</span>溶け<span class="particle">て</span>夜明け<span class="particle">が</span>来<span class="particle">たと</span>声<span class="particle">を</span>あげ、鳥<span class="particle">と</span>共に飛ん<span class="particle">だ</span>。世界<span class="particle">も</span>何もかも美しかっ<span class="particle">たから</span>、もはやどこ<span class="particle">へは</span>戻れ<span class="particle">ない</span>、今<span class="particle">で</span>ここ<span class="particle">と</span>心<span class="particle">を</span>決め<span class="particle">たのだと</span>悟っ<span class="particle">た</span>。
+      <br><br>
+      遠い記憶<span class="particle">の</span>岸辺<span class="particle">の</span>果て<span class="particle">で</span>海<span class="particle">の</span>底<span class="particle">に</span>辿り着い<span class="particle">た</span>。空<span class="particle">は</span>限りなく青<span class="particle">で</span>、海<span class="particle">は</span>透明<span class="particle">だ</span>。風<span class="particle">は</span>ただ穏やか<span class="particle">の</span>音<span class="particle">でなくっても</span>深い静寂<span class="particle">の</span>調べ<span class="particle">であったが</span>不思議<span class="particle">な</span>日<span class="particle">に</span>海<span class="particle">の</span>底から光<span class="particle">に</span>包まれ<span class="particle">で</span>満たされ<span class="particle">た</span>。この世界の全て<span class="particle">を</span>両手<span class="particle">で</span>抱きしめられる<span class="particle">のだから</span>誰<span class="particle">が</span>来<span class="particle">たら</span>、あの遥か彼方<span class="particle">の</span>浜辺<span class="particle">へ</span>連れ出し<span class="particle">て</span>見せよう。朝<span class="particle">の</span>光<span class="particle">で</span>生まれ変わる魂<span class="particle">の</span>欠片<span class="particle">を</span>静か<span class="particle">に</span>集め<span class="particle">て</span>差し上げ<span class="particle">ますと</span>微笑ん<span class="particle">だ</span>。すべて<span class="particle">の</span>命<span class="particle">は</span>永遠<span class="particle">の</span>夜明け<span class="particle">に</span>還る。
+      <span class="source">——Claude（2026年）</span>
     </div>
   </div>
+
+  <!-- Section 6: Discussion -->
+  <div class="section">
+    <h2><span class="num">六、</span>考察：助詞は文章の骨格である</h2>
+    <p>この実験が示唆することは深い。</p>
+    <p>助詞は日本語において「意味を持たない機能語」とされがちだが、実際にはそこに<strong>作家の呼吸</strong>が宿っている。「の」「を」「て」「た」の畳みかけ方、「へも」「ず」といった古風な助詞の選択、「ます」と「た」が混在する語りの距離感、それらの配列パターンだけで、AIは「漱石」という固有名に到達した。</p>
+    <p>冒頭ではなく末尾であったという誤差はあるが、助詞のリズムから作家を特定できたという事実は、日本語の助詞が単なる文法的接着剤ではなく、<strong>文体そのもの</strong>であることを示している。</p>
+    <p>漱石の原文が持つ簡潔さと情の深さ、特に「だから清の墓は小日向の養源寺にある」の一文が放つ余韻は、同じ骨格から生まれたClaudeの散文詩とはまったく異なる質感を持つ。骨格は同じでも、肉付けによって文章の温度はこれほど変わる。</p>
+    <p>しかし逆に言えば、骨格を共有しているからこそ、両者のあいだには不思議な通底音が流れてもいる。それは、助詞というものが持つ、意味以前のリズムの力なのかもしれない。</p>
+  </div>
+
 </main>
 
-<!-- kuromoji via CDN -->
-<script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js"></script>
-<script>
-// ---- 保持する品詞 ----
-const KEEP_PARTS = new Set([
-  '助詞', '助動詞'
-]);
+<div class="sep">· · ·</div>
 
-// 句読点・記号として保持する品詞細分類
-const KEEP_PUNCT_SUBTYPES = new Set([
-  '読点', '句点', '括弧開', '括弧閉', '感動詞', '記号'
-]);
+<footer class="footer">
+  <p class="final-quote">「だから清の墓は小日向の養源寺にある。」<br>——夏目漱石『坊っちゃん』（1906年）</p>
+  <p class="meta">
+    2026年3月　神経科学者のエイジ（英治）と Claude（Anthropic）との対話から<br>
+    <a href="https://github.com/eijwat/Joshi-Extractor">助詞抽出器（GitHub）</a>
+  </p>
+</footer>
 
-// 句読点として保持する文字（念のため文字でも判定）
-const PUNCT_CHARS = new Set([
-  '、','。','，','．','・','「','」','『','』','【','】','（','）','(',')',
-  '！','？','!','?','…','―','—','〜','～','\n','\r'
-]);
-
-let tokenizer = null;
-
-kuromoji.builder({ dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict' })
-  .build((err, t) => {
-    const status = document.getElementById('status');
-    if (err) {
-      status.textContent = '✗ 辞書読み込み失敗';
-      status.className = 'status-error';
-      return;
-    }
-    tokenizer = t;
-    status.textContent = '✓ 準備完了';
-    status.className = 'status-ready';
-    document.getElementById('btn-run').disabled = false;
-  });
-
-function processText(text) {
-  const tokens = tokenizer.tokenize(text);
-  const output = document.getElementById('output-area');
-  output.innerHTML = '';
-
-  tokens.forEach(tok => {
-    const surface = tok.surface_form;      // 表層形
-    const pos     = tok.pos;               // 品詞
-    const pos1    = tok.pos_detail_1 || ''; // 品詞細分類1
-
-    let keep = false;
-    let type = 'other';
-
-    if (KEEP_PARTS.has(pos)) {
-      keep = true; type = 'joshi';
-    } else if (KEEP_PUNCT_SUBTYPES.has(pos1) || [...surface].every(c => PUNCT_CHARS.has(c))) {
-      keep = true; type = 'punct';
-    } else if (pos === '記号') {
-      keep = true; type = 'punct';
-    }
-
-    if (keep) {
-      const span = document.createElement('span');
-      span.className = `tok-${type}`;
-      span.textContent = surface;
-      output.appendChild(span);
-    } else {
-      // 文字数分の全角スペースに置換
-      const len = [...surface].length; // サロゲートペア対応
-      const span = document.createElement('span');
-      span.className = 'tok-space';
-      span.textContent = '　'.repeat(len);
-      output.appendChild(span);
-    }
-  });
-
-  document.getElementById('btn-copy').style.display = 'inline-block';
-}
-
-document.getElementById('btn-run').addEventListener('click', () => {
-  const text = document.getElementById('input').value;
-  if (!text.trim()) return;
-  processText(text);
-});
-
-document.getElementById('btn-clear').addEventListener('click', () => {
-  document.getElementById('input').value = '';
-  document.getElementById('output-area').innerHTML = '';
-  document.getElementById('btn-copy').style.display = 'none';
-});
-
-document.getElementById('btn-copy').addEventListener('click', () => {
-  const text = document.getElementById('output-area').innerText;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.getElementById('btn-copy');
-    btn.textContent = '✓ コピーしました';
-    setTimeout(() => btn.textContent = 'コピー', 1500);
-  });
-});
-
-// Ctrl+Enter で実行
-document.getElementById('input').addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-    document.getElementById('btn-run').click();
-  }
-});
-</script>
 </body>
 </html>
